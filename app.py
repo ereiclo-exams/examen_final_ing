@@ -12,7 +12,7 @@ import json
 
 app = Flask(__name__)
 csrf = CSRFProtect()
-csrf.init_app(app) # Compliant
+# csrf.init_app(app) # Compliant
 app.secret_key = "12345678"
 
 basedir = os.path.abspath(os.path.dirname(__file__))
