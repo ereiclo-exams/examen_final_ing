@@ -39,13 +39,11 @@ def test_token(client):
 
 
 def test_null_messages(client):
-    # response_tok = client.get(token_path).get_json()['token']
     response = client.get('/message/gustos')
     assert response.get_json() == []
 
-def test_3_messages(client):
-    # response_tok = client.get(token_path).get_json()['token']
-    for i in range(3):
+def test_three_messages(client):
+    for _ in range(3):
         message = Message(text ='me gusta el pan',topic = 'gustos')
         db.session.add(message)
         db.session.commit()
@@ -58,25 +56,4 @@ def test_3_messages(client):
         assert m['topic'] == message.topic
 
 
-
-# def test6(client):
-
-#     response1 = client.get(token_path)
-#     response = None
-#     data = ['1324','31412','23141']
-#     for i in data: 
-#         response = client.post('/singleton',json = {
-#             "data": i,
-#         },headers={'X-CSRFToken':response1.get_json()['token']})
-#     assert int(response.json['len'])  == len(data) 
-
-
-
-# def test4(client):
-#     response = client.get(token_path)
-
-#     response = client.post(path,json = {
-#         "2": 'no',
-#     },headers={'X-CSRFToken':response.get_json()['token']})
-#     assert response.json['no vamos a ver']  == 'si' 
 
