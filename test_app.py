@@ -23,12 +23,41 @@ def client():
     
     os.close(db_fd)
     
+token_path = '/get-token'
 
-
-def test(client):
+def test_index(client):
 
     response = client.get('/')
     assert response.data.decode('utf-8')  == "This is an api for registering and reading messages with different topics" 
+def test_message():
+    message = Message(text ='me gusta el pan',topic = 'gustos')
+    assert message.__repr__()  == "Message object of topic \"gustos\" with text \"me gusta el pan\""
+
+def test_token(client):
+    response = client.get(token_path)
+    assert "token" in response.get_json()
+
+
+def test_null_messages(client):
+    # response_tok = client.get(token_path).get_json()['token']
+    response = client.get('/message/gustos')
+    assert response.get_json() == []
+
+def test_3_messages(client):
+    # response_tok = client.get(token_path).get_json()['token']
+    for i in range(3):
+        message = Message(text ='me gusta el pan',topic = 'gustos')
+        db.session.add(message)
+        db.session.commit()
+        
+
+    response = client.get('/message/gustos').get_json()
+    assert len(response) == 3
+    for m in response:
+        assert m['message'] == message.text
+        assert m['topic'] == message.topic
+
+
 
 # def test6(client):
 
