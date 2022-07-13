@@ -2,7 +2,7 @@ import os
 from crypt import methods
 from re import U
 from urllib import response
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify,Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import csrf as token_generator
 from flask_wtf.csrf import CSRFProtect
@@ -24,69 +24,54 @@ db = SQLAlchemy(app)
 
 
 
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(100), nullable=False)
+class Message(db.Model):
+    id_message = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    topic = db.Column(db.String(50),nullable = False)
 
     def __repr__(self):
-        return f'<Student {self.firstname}>'
-
-class Singleton:
-    _instance = None
-    array = []
-
-    @staticmethod
-    def get_instance():
-        if Singleton._instance == None:
-            Singleton()
-        return Singleton._instance
-    
-    def __init__(self):
-        if Singleton._instance != None:
-            raise RuntimeError('This class is a singleton!')
-        else:
-            Singleton._instance = self
-
-
-
+        return f'Message object of topic \"{self.topic}\" with text \"{self.text}\"'
 
 @app.route('/')
 def index():
-    return "hola" 
+    return "This is an api for registering and reading messages with different topics" 
 
 @app.route('/get-token')
 def token():
     response = {"token":token_generator.generate_csrf() }
     return jsonify(response)
 
-@app.route('/hola')
-def hola():
-    response = {'vamos a ver':3}
-    return jsonify(response)
+@app.route('/message/<topic>')
+def get_message_for_topic(topic):
+    response = [] 
+    messages = Message.query.filter_by(topic=topic)
 
-@app.route('/adios',methods=['POST'])
-def adios():
-    response = None
-    if request.get_json()['2'] == 'no':
-        response = {'no vamos a ver':'si'}
-    elif request.get_json()['2'] == 'si':
-        response = {'no vamos a ver':'no'}
+    for mess in messages:
+        response.append({'message':mess.text,'topic':mess.topic})
 
-    return jsonify(response)
+
+    return Response(json.dumps(response),mimetype='application/json') 
     
 
-@app.route('/singleton',methods=['POST'])
-def singleton():
-    s = Singleton.get_instance()
-    print(int(request.get_json()['data']))
-    s.array.append(int(request.get_json()['data']))
-    response = {'len':len(s.array)}
+@app.route('/message',methods=['POST'])
+def create_message():
+
+    response = {}
+    json_request = request.get_json()
+    if 'message' not in json_request:
+        response['status'] = 'fail'
+    elif 'topic' not in json_request:
+        response['status'] = 'fail'
+    else:
+        message = Message(text = json_request['message'],topic = json_request['topic'])
+        db.session.add(message)
+        db.session.commit()
+        response['status'] = 'ok'
 
     return jsonify(response)
     
 
 
 if __name__ == '__main__':
-    print(Student.query.all())
-    app.run(host='localhost',port=5002,debug=True)
+    app.run(host='localhost',port=5003,debug=True)
 
